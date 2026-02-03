@@ -1,0 +1,266 @@
+{
+  "name": "Prompt2Pixel-Image Prompt Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1040,
+        48
+      ],
+      "id": "f71545c2-8918-4ef0-8b73-02a3086bbf5a",
+      "name": "Telegram Bot Trigger",
+      "webhookId": "fb79d5ec-6ea9-445a-9059-8d156cedeb1e",
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "WIF6y1rKWki1v3Rl",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "69f13f5a-d6df-4244-a868-8fa64b338509",
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/start",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -688,
+        48
+      ],
+      "id": "5dfcfa80-1959-4784-82c5-a0e9ead8851d",
+      "name": "Check /start Command"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Bot Trigger').item.json.message.chat.id }}",
+        "text": "=Type your image idea.  \n\nExample: A cute astronaut cat floating in space, Pixar style, high detail",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -256,
+        -48
+      ],
+      "id": "c33449d8-3b95-4345-8e0c-dbb1d387cfe2",
+      "name": "Send Welcome Message",
+      "webhookId": "d2094fce-96c7-4e7c-aea7-a6aa9bed9e00",
+      "credentials": {
+        "telegramApi": {
+          "id": "WIF6y1rKWki1v3Rl",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.euron.one/api/v1/euri/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"prompt\": \"{{ $json.message.text }}\",\n    \"model\": \"gemini-3-pro-image-preview\",\n    \"n\": 1\n  } ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -320,
+        160
+      ],
+      "id": "a87f1ac4-ce91-4daa-84e5-99f3bf90a2f9",
+      "name": "Generate Image from Prompt",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "Vj8Pl4n6bdh618nU",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Bot Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.data[0].url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        160
+      ],
+      "id": "0eaa36d0-566d-4d19-9a96-772c32b49ecd",
+      "name": "Send Image URL",
+      "webhookId": "e3cc07a0-b5d4-43cf-b601-859cae1c1dbd",
+      "credentials": {
+        "telegramApi": {
+          "id": "WIF6y1rKWki1v3Rl",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Listens for incoming Telegram messages.\nThis is the entry point of the workflow.\nTriggers on every user message sent to the bot."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1120,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "d1b9a39b-3541-453d-9222-04b554dc2c3c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Checks whether the incoming Telegram message is the \"/start\" command.\nIf true → sends welcome and usage instructions.\nIf false → treats the message as an image generation prompt."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -768,
+        208
+      ],
+      "typeVersion": 1,
+      "id": "0231ce42-6710-4da6-b76e-0eca967d7715",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Sends an onboarding message when the user types /start.\nExplains how to use the bot and provides an example image prompt."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -144,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "5cd5672a-4f27-44ca-be0d-d8f0c471ddff",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Calls the AI Image Generation API.\nUses the user's Telegram message text as the image prompt.\nModel: Gemini 3 Pro Image Preview.\nReturns a generated image URL."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -368,
+        336
+      ],
+      "typeVersion": 1,
+      "id": "423af93f-5d03-48f1-8dc5-4ce89edb0509",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Sends the generated image URL back to the user on Telegram.\nThis is the final response of the workflow."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -16,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "51ea27c6-ced0-4a8e-afb7-76871d3986f9",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Prompt2Pixel – Telegram Image Generation Bot\n\nFlow:\nTelegram → Command Check → Image Generation → Telegram Reply\n\nPurpose:\nConvert user text prompts into AI-generated images using Gemini.\n",
+        "height": 288,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1536,
+        -272
+      ],
+      "typeVersion": 1,
+      "id": "1b3b017f-abd5-49d6-8c2c-3b24e98209e9",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Bot Trigger": {
+      "main": [
+        [
+          {
+            "node": "Check /start Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check /start Command": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Image from Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image from Prompt": {
+      "main": [
+        [
+          {
+            "node": "Send Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "42be3ee3-5be8-411e-9de1-bac1b7bb4d39",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ccff8bb4a73d98b9d11f51f941349ea59a17715d5140fd97dbb54404ac023b78"
+  },
+  "id": "mT3nnyaxg4Y1g1uT",
+  "tags": []
+}
